@@ -1,0 +1,817 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>BookingOS Prototype</title>
+<meta name="description" content="Clickable prototype of BookingOS: guest booking flow and owner dashboard for a small surf school. Sample data only.">
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#12202B; --muted:#5A6872; --line:#DDE3E6; --field:#C9D2D6;
+  --surface:#F2F5F6; --white:#FFFFFF;
+  --accent:#0F5E63; --accent-dark:#0A4347; --accent-soft:#E6F1F1;
+  --warn:#B45309; --warn-ink:#7A3E06; --warn-soft:#FFF4E5;
+  --bad:#B42318; --bad-ink:#8A1C12; --bad-soft:#FDECEA;
+  --page:#DCE3E6;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--page);font-family:'Plus Jakarta Sans',system-ui,-apple-system,sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+a{color:var(--accent)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* Prototype chrome (desktop) */
+.wrap{min-height:100vh;display:flex;justify-content:center;align-items:flex-start;gap:32px;padding:32px 16px}
+.side{width:260px;flex-shrink:0;position:sticky;top:32px}
+.side h1{font-size:20px;margin:0 0 4px}
+.side p{font-size:13px;color:var(--muted);margin:0 0 16px;line-height:1.5}
+.side h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:18px 0 8px}
+.side nav{display:flex;flex-direction:column;gap:4px}
+.side nav a{display:block;padding:8px 10px;border-radius:8px;color:var(--ink);text-decoration:none;font-size:14px;font-weight:600}
+.side nav a:hover{background:rgba(255,255,255,.6)}
+.side nav a.on{background:var(--white);color:var(--accent)}
+.phone{width:390px;height:844px;background:var(--white);border-radius:40px;box-shadow:0 0 0 10px #12202B,0 30px 60px rgba(18,32,43,.25);overflow:hidden;position:relative;flex-shrink:0}
+.mobilebar{display:none}
+
+@media (max-width: 760px){
+  body{background:var(--white)}
+  .wrap{padding:0;display:block}
+  .side{display:none}
+  .phone{width:100%;height:auto;min-height:100vh;min-height:100dvh;border-radius:0;box-shadow:none}
+  .mobilebar{display:flex;position:sticky;top:0;z-index:20;background:#12202B;color:#fff;font-size:12px;padding:8px 16px;justify-content:space-between;align-items:center;gap:8px}
+  .mobilebar button{background:rgba(255,255,255,.15);border:0;color:#fff;border-radius:999px;padding:6px 12px;font-weight:700;font-size:12px}
+  .screen{min-height:calc(100dvh - 34px)}
+}
+
+/* Screens */
+.screen{display:none;height:100%;flex-direction:column;overflow-y:auto}
+.screen.show{display:flex}
+.pad{padding:20px;display:flex;flex-direction:column;gap:16px;flex-grow:1}
+.grey{background:var(--surface)}
+.row{display:flex;align-items:center;gap:12px}
+.between{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.h1{font-size:22px;font-weight:800}
+.h2{font-size:17px;font-weight:800}
+.h3{font-size:15px;font-weight:700}
+.small{font-size:13px;color:var(--muted)}
+.tiny{font-size:12px;color:var(--muted)}
+.card{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.grey .card{border:0}
+.back{width:44px;height:44px;border-radius:12px;background:var(--surface);border:0;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+.grey .back{background:var(--white)}
+.btn{display:block;width:100%;text-align:center;border:0;border-radius:14px;padding:16px;font-weight:700;font-size:16px;cursor:pointer;text-decoration:none}
+.btn.primary{background:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-dark)}
+.btn.soft{background:var(--surface);color:var(--ink)}
+.btn.line{background:var(--white);color:var(--ink);border:1px solid var(--line)}
+.btn.warn{background:var(--warn);color:#fff}
+.btn.dark{background:var(--ink);color:#fff;font-size:14px;padding:12px;border-radius:10px}
+.btn.sm{font-size:15px;padding:13px;border-radius:12px}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.bottom{margin-top:auto;display:flex;flex-direction:column;gap:8px}
+.opt{border:1px solid var(--line);background:var(--white);border-radius:12px;padding:12px 14px;cursor:pointer;font-weight:600;font-size:14px;text-align:center}
+.opt.sel{border:2px solid var(--accent);background:var(--accent-soft);padding:11px 13px;font-weight:800}
+.opt.sel.warnsel{border-color:var(--warn);background:var(--warn-soft);color:var(--warn-ink)}
+.opt.sel.badsel{border-color:var(--bad);background:var(--bad-soft);color:var(--bad-ink)}
+.opt:disabled{background:#F7F9FA;color:var(--muted);cursor:not-allowed}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.grid5{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+.day{display:flex;flex-direction:column;align-items:center;gap:2px;padding:10px 0}
+.day .dw{font-size:12px;color:var(--muted);font-weight:600}
+.day .dn{font-size:17px;font-weight:700}
+.slot{display:flex;justify-content:space-between;align-items:center;text-align:left;font-size:16px}
+.slot .tiny{font-weight:600}
+.slot:disabled span:first-child{text-decoration:line-through}
+.note{border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.45}
+.note.warn{background:var(--warn-soft);color:var(--warn-ink)}
+.note.bad{background:var(--bad-soft);color:var(--bad-ink)}
+.note.good{background:var(--accent-soft);color:var(--accent-dark)}
+.stepper{display:flex;align-items:center;gap:14px}
+.stepper button{width:44px;height:44px;border-radius:12px;border:1px solid var(--line);background:var(--white);font-size:20px;cursor:pointer}
+.stepper output{font-size:18px;font-weight:800;min-width:16px;text-align:center}
+label.f{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600}
+label.f input{font-size:16px;font-weight:400;padding:12px 14px;border:1px solid var(--field);border-radius:12px;background:#fff}
+label.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;line-height:1.45;cursor:pointer}
+label.check input{width:20px;height:20px;margin:0;accent-color:var(--accent);flex-shrink:0}
+.pill{font-size:11px;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+.pill.ok{color:var(--accent);background:var(--accent-soft)}
+.pill.wait{color:var(--warn-ink);background:var(--warn-soft)}
+.pill.no{color:var(--bad-ink);background:var(--bad-soft)}
+.src{font-size:12px;font-weight:600;color:var(--muted)}
+.lang{display:flex;border-radius:999px;padding:3px}
+.lang button{border:0;background:transparent;font-size:13px;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer}
+.tabs{background:var(--white);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,minmax(0,1fr));padding:6px 0 14px;position:sticky;bottom:0}
+.tabs button{border:0;background:none;font-size:12px;font-weight:600;color:var(--muted);padding:10px 0;cursor:pointer}
+.tabs button.on{color:var(--accent);font-weight:800}
+.bubble{background:#fff;border:1px solid #E3E8EA;border-radius:12px;padding:12px 14px;font-size:13px;line-height:1.5}
+.num{width:28px;height:28px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.tile{background:#fff;border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:4px}
+.tile .v{font-size:26px;font-weight:800}
+.bars{display:grid;grid-template-columns:100px minmax(0,1fr) 20px;gap:8px;align-items:center;font-size:13px}
+.bar{height:10px;background:#E6EAEC;border-radius:99px}
+.bar i{display:block;height:10px;background:var(--bad-ink);border-radius:99px}
+.lrow{display:grid;grid-template-columns:minmax(0,1fr) 46px 60px 38px;gap:6px;align-items:baseline;font-size:14px}
+.lrow span:not(:first-child){text-align:right}
+.chip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:10px 15px;font-size:13px;font-weight:600;cursor:pointer}
+.chip.sel{background:var(--ink);color:#fff;border-color:var(--ink)}
+.qr{width:220px;height:220px;margin:0 auto;padding:12px;background:#fff;border:1px solid var(--line);border-radius:16px}
+.toast{position:absolute;left:16px;right:16px;bottom:24px;background:var(--ink);color:#fff;border-radius:12px;padding:14px 16px;font-size:14px;font-weight:600;opacity:0;transform:translateY(10px);transition:all .2s;pointer-events:none;z-index:30}
+.toast.show{opacity:1;transform:none}
+@media (max-width:760px){.toast{position:fixed}}
+.hero{background:var(--accent);padding:20px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between}
+.logo{width:52px;height:52px;border-radius:14px;background:#fff;color:var(--accent);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:18px}
+.sessionhead{display:flex;justify-content:space-between;align-items:center}
+.gline{display:flex;justify-content:space-between;align-items:center;font-size:14px;gap:8px}
+.gline .r{display:flex;gap:8px;align-items:center}
+</style>
+</head>
+<body>
+<div class="mobilebar">
+  <span>BookingOS prototype · sample data</span>
+  <button type="button" id="mobileSwitch">Owner view</button>
+</div>
+<div class="wrap">
+  <aside class="side">
+    <h1>BookingOS</h1>
+    <p>Clickable prototype for a made-up surf school. Sample data only: nothing is saved or booked, and no messages are sent.</p>
+    <h2>Guest</h2>
+    <nav id="navGuest">
+      <a href="#home">1 · Booking page</a>
+      <a href="#time">2 · Pick a time</a>
+      <a href="#details">3 · Details</a>
+      <a href="#qr">3b · Pay by QR</a>
+      <a href="#confirmed">4 · Confirmed</a>
+      <a href="#rebook">4b · After a weather cancel</a>
+    </nav>
+    <h2>Owner</h2>
+    <nav id="navOwner">
+      <a href="#today">5 · Today</a>
+      <a href="#weather">6 · Weather cancel</a>
+      <a href="#walkin">7 · Add walk-in</a>
+      <a href="#checkin">8 · Who came + who paid</a>
+      <a href="#stats">9 · Stats</a>
+      <a href="#links">10 · Your links</a>
+    </nav>
+  </aside>
+
+  <main class="phone" id="phone">
+
+    <!-- 1 HOME -->
+    <section class="screen" data-screen="home" aria-label="School booking page">
+      <div class="hero">
+        <div style="display:flex;justify-content:flex-end">
+          <div class="lang" style="background:rgba(255,255,255,.18)">
+            <button type="button" data-lang="en" style="background:#fff;color:var(--ink);font-weight:700">EN</button>
+            <button type="button" data-lang="vi" style="color:#fff">VI</button>
+          </div>
+        </div>
+        <div class="row">
+          <div class="logo" aria-hidden="true">MK</div>
+          <div>
+            <div style="color:#fff;font-size:21px;font-weight:800">My Khe Surf Co.</div>
+            <div style="color:#D8EEEF;font-size:13px" data-i18n="location">My Khe Beach, Da Nang</div>
+          </div>
+        </div>
+      </div>
+      <div class="pad">
+        <div class="h3" data-i18n="choose">Choose a lesson</div>
+        <div class="card">
+          <div class="between" style="align-items:flex-start">
+            <div><div style="font-size:16px;font-weight:700" data-i18n="group">Beginner group lesson</div><div class="small" data-i18n="groupDesc">2 hours · board + rash vest · max 4 per coach</div></div>
+            <div class="h3">[PRICE]</div>
+          </div>
+          <button type="button" class="btn primary sm" data-go="time" data-lesson="group" data-i18n="seeTimes">See times</button>
+        </div>
+        <div class="card">
+          <div class="between" style="align-items:flex-start">
+            <div><div style="font-size:16px;font-weight:700" data-i18n="private">Private lesson</div><div class="small" data-i18n="privateDesc">1.5 hours · 1 coach, 1–2 surfers</div></div>
+            <div class="h3">[PRICE]</div>
+          </div>
+          <button type="button" class="btn soft sm" data-go="time" data-lesson="private" data-i18n="seeTimes">See times</button>
+        </div>
+        <div class="card">
+          <div class="between">
+            <div><div style="font-size:16px;font-weight:700" data-i18n="rental">Board rental</div><div class="small" data-i18n="rentalDesc">Half day or full day</div></div>
+            <div class="h3">[PRICE]</div>
+          </div>
+        </div>
+        <div class="card" style="background:var(--surface);border:0;margin-top:auto">
+          <div style="font-size:14px;font-weight:600" data-i18n="questions">Questions? We reply fast.</div>
+          <div class="grid2">
+            <button type="button" class="btn line sm" data-toast="Would open WhatsApp chat with the school">WhatsApp</button>
+            <button type="button" class="btn line sm" data-toast="Would open Zalo chat with the school">Zalo</button>
+          </div>
+        </div>
+        <div class="tiny" style="text-align:center">Powered by BookingOS</div>
+      </div>
+    </section>
+
+    <!-- 2 TIME -->
+    <section class="screen" data-screen="time" aria-label="Pick a time">
+      <div class="pad">
+        <div class="row">
+          <button type="button" class="back" data-go="home" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div><div class="h2" id="timeTitle">Beginner group lesson</div><div class="small" id="timeSub">2 hours · [PRICE] per person</div></div>
+        </div>
+        <div class="grid5" id="days"></div>
+        <div class="note warn">Lesson times follow the tide, so they change day to day. If the surf is unsafe, you'll get a free reschedule or a refund.</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div class="h3" id="dayLabel"></div>
+          <div id="slots" style="display:flex;flex-direction:column;gap:10px"></div>
+        </div>
+        <div class="between">
+          <div class="h3">Surfers</div>
+          <div class="stepper"><button type="button" data-step="-1" aria-label="Fewer surfers">−</button><output id="surfers">2</output><button type="button" data-step="1" aria-label="More surfers">+</button></div>
+        </div>
+        <div class="bottom"><button type="button" class="btn primary" id="toDetails">Continue</button></div>
+      </div>
+    </section>
+
+    <!-- 3 DETAILS -->
+    <section class="screen" data-screen="details" aria-label="Your details">
+      <div class="pad">
+        <div class="row">
+          <button type="button" class="back" data-go="time" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div class="h2">Your details</div>
+        </div>
+        <div class="card" style="background:var(--surface);border:0;gap:4px">
+          <div class="h3" id="sumLesson"></div>
+          <div class="small" id="sumWhen"></div>
+        </div>
+        <label class="f">Full name<input id="name" value="Sarah Jensen" autocomplete="name"></label>
+        <label class="f">WhatsApp or Zalo number<input id="phoneNum" value="+61 412 345 678" inputmode="tel" autocomplete="tel"><span class="tiny" style="font-weight:400">Your confirmation and reminder go here.</span></label>
+        <label class="check"><input type="checkbox" id="waiver" checked><span>Everyone in the booking can swim, and I agree to the <a href="#" data-toast="Would open the school's safety waiver">safety waiver</a>.</span></label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="h3">How do you want to pay?</div>
+          <div class="grid2" id="payOpts">
+            <button type="button" class="opt sel" data-pay="qr">Deposit by bank QR</button>
+            <button type="button" class="opt" data-pay="beach">Pay at the beach</button>
+          </div>
+          <div class="tiny" id="payNote" style="line-height:1.45">QR deposit is paid straight to My Khe Surf Co. Your spot is held for 30 minutes while you pay.</div>
+        </div>
+        <div class="bottom">
+          <div class="between" style="font-size:14px" id="depRow"><span class="small" style="font-size:14px">Deposit now</span><b>[DEPOSIT]</b></div>
+          <div class="between" style="font-size:14px"><span class="small" style="font-size:14px">At the beach</span><b id="balance">[BALANCE]</b></div>
+          <button type="button" class="btn primary" id="toPay">Show QR and book</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3b QR -->
+    <section class="screen" data-screen="qr" aria-label="Pay deposit by QR">
+      <div class="pad">
+        <div class="row">
+          <button type="button" class="back" data-go="details" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div><div class="h2">Pay your deposit</div><div class="small">Spot held for <b id="countdown">30:00</b></div></div>
+        </div>
+        <div class="qr" role="img" aria-label="Sample QR code (not a real payment code)"><svg id="qrSvg" viewBox="0 0 29 29" width="100%" height="100%" shape-rendering="crispEdges"></svg></div>
+        <div class="tiny" style="text-align:center">Sample QR for the prototype, not a real payment code</div>
+        <div class="card" style="gap:8px">
+          <div class="between small"><span>Amount</span><b style="color:var(--ink)">[DEPOSIT]</b></div>
+          <div class="between small"><span>Pay to</span><b style="color:var(--ink)">My Khe Surf Co.</b></div>
+          <div class="between small"><span>Transfer note</span><b style="color:var(--ink)" id="refCode">MK-AB12</b></div>
+        </div>
+        <div class="note good">Scan with any Vietnamese banking app. Can't scan a Vietnamese QR? Go back and choose <b>Pay at the beach</b>.</div>
+        <div class="bottom"><button type="button" class="btn primary" data-go="confirmed">I've paid</button></div>
+      </div>
+    </section>
+
+    <!-- 4 CONFIRMED -->
+    <section class="screen" data-screen="confirmed" aria-label="Booking confirmed">
+      <div class="pad" style="padding-top:28px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center">
+          <div style="width:64px;height:64px;border-radius:999px;background:var(--accent);color:#fff;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+          <div style="font-size:24px;font-weight:800" id="bookedTitle">You're booked</div>
+          <div class="small" id="bookedWhen"></div>
+          <div id="payStatus"></div>
+        </div>
+        <div class="card" style="background:var(--surface);border:0;padding:14px;gap:8px">
+          <div class="tiny" style="font-weight:600">Sent to your WhatsApp</div>
+          <div class="bubble" id="confirmMsg"></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <div class="h3">What happens next</div>
+          <div class="row" style="align-items:flex-start"><div class="num">1</div><div style="font-size:14px;line-height:1.45">The evening before, we message you a reminder with a <b>confirm</b> link.</div></div>
+          <div class="row" style="align-items:flex-start"><div class="num">2</div><div style="font-size:14px;line-height:1.45">If the surf is unsafe, you choose a new time or a refund in one tap. <a href="#rebook">See how</a></div></div>
+          <div class="row" style="align-items:flex-start"><div class="num">3</div><div style="font-size:14px;line-height:1.45">Arrive 10 minutes early. Bring sunscreen and water.</div></div>
+        </div>
+        <div class="bottom">
+          <div class="grid2"><button type="button" class="btn line sm" data-toast="Would add the lesson to your phone calendar">Add to calendar</button><button type="button" class="btn line sm" data-toast="Would open Google Maps to the meeting point">Directions</button></div>
+          <button type="button" class="btn line sm" data-go="home" style="border:0;color:var(--accent)">Book another lesson</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4b REBOOK -->
+    <section class="screen" data-screen="rebook" aria-label="Lesson cancelled for conditions">
+      <div class="pad">
+        <div class="note warn" style="font-size:14px"><b>Today's 8:30 AM lesson is cancelled.</b><br>Sorry, the waves are too big for a safe lesson. Your deposit is safe.</div>
+        <div class="h3">Pick a new time, free</div>
+        <div style="display:flex;flex-direction:column;gap:10px" id="rebookSlots">
+          <button type="button" class="opt slot" data-rb="Tomorrow 6:00 AM"><span>Tomorrow · 6:00 AM</span><span class="tiny">2 spots</span></button>
+          <button type="button" class="opt slot" data-rb="Tomorrow 8:30 AM"><span>Tomorrow · 8:30 AM</span><span class="tiny">4 spots</span></button>
+          <button type="button" class="opt slot" data-rb="In 2 days 9:00 AM"><span>In 2 days · 9:00 AM</span><span class="tiny">3 spots</span></button>
+        </div>
+        <button type="button" class="btn primary" id="rebookBtn" disabled>Move my booking</button>
+        <div class="tiny" style="text-align:center">or</div>
+        <button type="button" class="btn line sm" data-toast="Refund requested. My Khe Surf Co. will send it back to your account.">Request a refund instead</button>
+        <div class="tiny" style="margin-top:auto;text-align:center;line-height:1.5">Guests reach this page from the cancel message the school sends.</div>
+      </div>
+    </section>
+
+    <!-- 5 TODAY -->
+    <section class="screen grey" data-screen="today" aria-label="Owner today view">
+      <div style="padding:20px 20px 12px;display:flex;flex-direction:column;gap:14px">
+        <div class="between">
+          <div><div class="small">My Khe Surf Co.</div><div class="h1" id="todayTitle">Today</div></div>
+          <div class="lang" style="background:#fff;border:1px solid var(--line)">
+            <button type="button" style="background:var(--ink);color:#fff;font-weight:700;font-size:12px;padding:6px 10px">EN</button>
+            <button type="button" style="font-size:12px;padding:6px 10px" data-toast="Owner screens would switch to Vietnamese">VI</button>
+          </div>
+        </div>
+        <div class="grid2">
+          <button type="button" class="btn primary sm" data-go="walkin">+ Walk-in</button>
+          <button type="button" class="btn line sm" data-go="weather" style="color:#8A4B08;border-color:#F0C48A">Weather cancel</button>
+        </div>
+      </div>
+      <div style="padding:0 20px 20px;display:flex;flex-direction:column;gap:12px;flex-grow:1">
+        <div class="card" id="s600">
+          <div class="sessionhead"><div style="font-size:16px;font-weight:800">6:00 AM · Group</div><div style="font-size:13px;font-weight:700;color:#8A4B08">4/4 full</div></div>
+          <div class="tiny">Coach: Minh</div>
+          <div class="gline"><span>Tom R. ×2</span><span class="src">Klook</span></div>
+          <div class="gline"><span>Linh N.</span><span class="src">Zalo</span></div>
+          <div class="gline"><span>Walk-in</span><span class="src">Beach</span></div>
+          <button type="button" class="btn dark" data-go="checkin" id="checkinBtn">Lesson done · mark who came</button>
+        </div>
+        <div class="card" id="s830">
+          <div class="sessionhead"><div style="font-size:16px;font-weight:800">8:30 AM · Group</div><div style="font-size:13px;font-weight:700;color:var(--accent)" id="cap830">2/4</div></div>
+          <div class="tiny">Coach: Tuấn</div>
+          <div class="gline"><span>Sarah J. ×2</span><span class="r"><span class="src">Direct</span><span class="pill ok">Confirmed</span></span></div>
+          <div id="walkins830"></div>
+        </div>
+        <div class="card">
+          <div class="sessionhead"><div style="font-size:16px;font-weight:800">10:00 AM · Private</div><div style="font-size:13px;font-weight:700;color:var(--accent)">1/1</div></div>
+          <div class="tiny">Coach: Minh</div>
+          <div class="gline"><span>Daniel K.</span><span class="r"><span class="src">Airbnb</span><span class="pill wait">Not confirmed</span></span></div>
+        </div>
+      </div>
+      <div class="tabs" role="tablist">
+        <button type="button" class="on" data-go="today">Today</button>
+        <button type="button" data-toast="Calendar view is not in the prototype yet">Calendar</button>
+        <button type="button" data-go="stats">Stats</button>
+        <button type="button" data-go="links">Links</button>
+      </div>
+    </section>
+
+    <!-- 6 WEATHER -->
+    <section class="screen" data-screen="weather" aria-label="Weather cancel">
+      <div class="pad">
+        <div class="row">
+          <button type="button" class="back" data-go="today" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div><div class="h2">Cancel for conditions</div><div class="small" id="weatherDate">Today</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="h3" style="font-size:14px">Which sessions?</div>
+          <button type="button" class="opt slot sel warnsel" data-wx="4"><span>6:00 AM · Group</span><span class="tiny">4 surfers</span></button>
+          <button type="button" class="opt slot sel warnsel" data-wx="2"><span>8:30 AM · Group</span><span class="tiny">2 surfers</span></button>
+          <button type="button" class="opt slot" data-wx="1"><span>10:00 AM · Private</span><span class="tiny">1 surfer</span></button>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="h3" style="font-size:14px">Reason</div>
+          <div style="display:flex;flex-wrap:wrap;gap:8px" id="reasons">
+            <button type="button" class="chip sel" data-reason="the waves are too big for a safe lesson">Waves too big</button>
+            <button type="button" class="chip" data-reason="there's a storm coming in">Storm</button>
+            <button type="button" class="chip" data-reason="there are no waves">No waves</button>
+            <button type="button" class="chip" data-reason="we can't run the lesson safely">Other</button>
+          </div>
+        </div>
+        <div class="card" style="background:var(--surface);border:0;padding:12px 14px;gap:6px">
+          <div class="tiny" style="font-weight:600">Guests get this (in their language)</div>
+          <div style="font-size:13px;line-height:1.5" id="wxMsg"></div>
+          <a href="#rebook" style="font-size:13px;font-weight:700">See the page guests open →</a>
+        </div>
+        <div class="note warn" style="font-size:12px" id="klookNote">2 surfers booked on Klook. You'll also need to cancel them on Klook. We'll remind you.</div>
+        <div class="bottom"><button type="button" class="btn warn" id="wxSend">Message 6 surfers and cancel</button></div>
+      </div>
+    </section>
+
+    <!-- 7 WALK-IN -->
+    <section class="screen" data-screen="walkin" aria-label="Add walk-in">
+      <div class="pad">
+        <div class="row">
+          <button type="button" class="back" data-go="today" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div><div class="h2">Add walk-in</div><div class="small">Takes 10 seconds. Stops double bookings.</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px" id="wiSessions">
+          <div class="h3" style="font-size:14px">Session</div>
+          <button type="button" class="opt slot" disabled><span>6:00 AM · Group</span><span class="tiny">Full</span></button>
+          <button type="button" class="opt slot sel" data-wi="8:30 AM"><span>8:30 AM · Group</span><span class="tiny" id="wiSpots">2 spots</span></button>
+          <button type="button" class="opt slot" data-wi="3:30 PM"><span>3:30 PM · Group</span><span class="tiny">4 spots</span></button>
+        </div>
+        <div class="between">
+          <div class="h3" style="font-size:14px">Surfers</div>
+          <div class="stepper"><button type="button" data-wstep="-1" aria-label="Fewer surfers">−</button><output id="wiCount">1</output><button type="button" data-wstep="1" aria-label="More surfers">+</button></div>
+        </div>
+        <label class="f">Name (optional)<input id="wiName" placeholder="e.g. Anna"></label>
+        <label class="f">WhatsApp / Zalo (optional, for weather messages)<input placeholder="+84 …" inputmode="tel"></label>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="h3" style="font-size:14px">Paid?</div>
+          <div class="grid3" id="wiPaid">
+            <button type="button" class="opt sel" data-paid="Cash">Cash</button>
+            <button type="button" class="opt" data-paid="Bank QR">Bank QR</button>
+            <button type="button" class="opt" data-paid="Not paid">Not yet</button>
+          </div>
+        </div>
+        <div class="bottom"><button type="button" class="btn primary" id="wiAdd">Add to 8:30 AM</button></div>
+      </div>
+    </section>
+
+    <!-- 8 CHECK-IN -->
+    <section class="screen grey" data-screen="checkin" aria-label="Mark who came and who paid">
+      <div class="pad" style="gap:14px">
+        <div class="row">
+          <button type="button" class="back" data-go="today" aria-label="Back"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg></button>
+          <div><div class="h2">6:00 AM · Group</div><div class="small">Everyone starts as "came". Tap only what's different.</div></div>
+        </div>
+        <div class="card" data-guest="2">
+          <div class="between"><span class="h3">Tom R. ×2</span><span class="src">Klook</span></div>
+          <div class="grid2"><button type="button" class="opt sel" data-att="came">Came</button><button type="button" class="opt" data-att="no">No-show</button></div>
+          <div class="tiny">Paid: <b style="color:var(--ink)">on Klook</b></div>
+        </div>
+        <div class="card" data-guest="1">
+          <div class="between"><span class="h3">Linh N.</span><span class="src">Zalo</span></div>
+          <div class="grid2"><button type="button" class="opt sel" data-att="came">Came</button><button type="button" class="opt" data-att="no">No-show</button></div>
+          <div class="tiny">Paid: <b style="color:var(--ink)">QR deposit</b></div>
+          <div class="note bad" style="font-size:12px;padding:8px 10px;display:none" data-repeat>2nd no-show for this number. Next booking will need a deposit.</div>
+        </div>
+        <div class="card" data-guest="1" data-unpaid>
+          <div class="between"><span class="h3">Walk-in</span><span class="src">Beach</span></div>
+          <div class="grid2"><button type="button" class="opt sel" data-att="came">Came</button><button type="button" class="opt" data-att="no">No-show</button></div>
+          <div class="grid3" data-paygroup>
+            <button type="button" class="opt" data-p="cash" style="font-size:12px">Cash</button>
+            <button type="button" class="opt" data-p="qr" style="font-size:12px">Bank QR</button>
+            <button type="button" class="opt sel warnsel" data-p="none" style="font-size:12px">Not paid</button>
+          </div>
+        </div>
+        <div class="bottom">
+          <div class="small" style="text-align:center" id="ciSummary"></div>
+          <button type="button" class="btn primary" id="ciSave">Save</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 9 STATS -->
+    <section class="screen grey" data-screen="stats" aria-label="Owner stats">
+      <div style="padding:20px;display:flex;flex-direction:column;gap:14px;flex-grow:1">
+        <div class="between"><div class="h1">Stats</div><span class="tiny">Example numbers</span></div>
+        <div class="grid3" style="background:#fff;border-radius:12px;padding:3px;border:1px solid var(--line);gap:0" id="periods">
+          <button type="button" class="chip" style="border:0;border-radius:9px">Week</button>
+          <button type="button" class="chip sel" style="border-radius:9px">Month</button>
+          <button type="button" class="chip" style="border:0;border-radius:9px">Season</button>
+        </div>
+        <div class="grid2" style="gap:10px">
+          <div class="tile"><div class="tiny" style="font-weight:600">Surfers booked</div><div class="v">142</div></div>
+          <div class="tile"><div class="tiny" style="font-weight:600">No-shows</div><div class="v" style="color:var(--bad-ink)">9 <span class="small" style="font-weight:600">· 6%</span></div></div>
+          <div class="tile"><div class="tiny" style="font-weight:600">Unpaid</div><div class="v" style="color:var(--warn-ink)">3 <span class="small" style="font-weight:600">· [AMOUNT]</span></div></div>
+          <div class="tile"><div class="tiny" style="font-weight:600">Weather cancels</div><div class="v">4 <span class="small" style="font-weight:600">sessions</span></div></div>
+        </div>
+        <div class="card" style="padding:14px 16px">
+          <div class="h3" style="font-size:14px">No-shows by where they booked</div>
+          <div class="bars">
+            <span>Zalo/WhatsApp</span><div class="bar"><i style="width:100%"></i></div><b style="text-align:right">5</b>
+            <span>Direct page</span><div class="bar"><i style="width:40%"></i></div><b style="text-align:right">2</b>
+            <span>Walk-in</span><div class="bar"><i style="width:20%"></i></div><b style="text-align:right">1</b>
+            <span>Klook</span><div class="bar"><i style="width:20%"></i></div><b style="text-align:right">1</b>
+          </div>
+          <div class="tiny" style="line-height:1.45">Most no-shows booked by chat without a deposit.</div>
+        </div>
+        <div class="card" style="padding:14px 16px" id="collect">
+          <div class="h3" style="font-size:14px">Still to collect</div>
+          <div class="between" style="font-size:13px"><span>Walk-in · today 6:00 AM</span><button type="button" class="chip" data-markpaid style="padding:6px 10px;color:var(--accent);font-weight:700">Mark paid</button></div>
+          <div class="between" style="font-size:13px"><span>Mai T. · Tue 3:30 PM</span><button type="button" class="chip" data-markpaid style="padding:6px 10px;color:var(--accent);font-weight:700">Mark paid</button></div>
+          <div class="between" style="font-size:13px"><span>James W. · Mon 8:30 AM</span><button type="button" class="chip" data-markpaid style="padding:6px 10px;color:var(--accent);font-weight:700">Mark paid</button></div>
+        </div>
+      </div>
+      <div class="tabs">
+        <button type="button" data-go="today">Today</button>
+        <button type="button" data-toast="Calendar view is not in the prototype yet">Calendar</button>
+        <button type="button" class="on" data-go="stats">Stats</button>
+        <button type="button" data-go="links">Links</button>
+      </div>
+    </section>
+
+    <!-- 10 LINKS -->
+    <section class="screen grey" data-screen="links" aria-label="Your links and QR codes">
+      <div style="padding:20px;display:flex;flex-direction:column;gap:12px;flex-grow:1">
+        <div class="between">
+          <div><div class="h1">Your links</div><div class="small">This month · where bookings come from</div></div>
+          <button type="button" class="btn primary sm" style="width:auto;padding:12px 14px" id="newLink">+ New</button>
+        </div>
+        <div class="lrow tiny" style="font-weight:700;padding:0 14px;font-size:11px"><span>Link</span><span>Visits</span><span>Bookings</span><span>Rate</span></div>
+        <div id="linkList" style="display:flex;flex-direction:column;gap:10px"></div>
+        <div class="note good" style="font-size:13px">The hostel QR turns the most visits into bookings. Facebook posts bring visits but almost no bookings. Worth asking another hostel to put up a QR.</div>
+        <div class="tiny" style="text-align:center">Plus 9 bookings with no link (typed in or walk-in) · example numbers</div>
+      </div>
+      <div class="tabs">
+        <button type="button" data-go="today">Today</button>
+        <button type="button" data-toast="Calendar view is not in the prototype yet">Calendar</button>
+        <button type="button" data-go="stats">Stats</button>
+        <button type="button" class="on" data-go="links">Links</button>
+      </div>
+    </section>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </main>
+</div>
+
+<script>
+(function(){
+  var $ = function(s,r){return (r||document).querySelector(s)};
+  var $$ = function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+  var GUEST = ['home','time','details','qr','confirmed','rebook'];
+  var state = {lesson:'group', dayIndex:1, slot:null, surfers:2, pay:'qr', lang:'en'};
+
+  /* ---------- toast ---------- */
+  var tTimer;
+  function toast(msg){
+    var t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(tTimer); tTimer = setTimeout(function(){t.classList.remove('show')}, 2400);
+  }
+
+  /* ---------- routing ---------- */
+  function go(name){ if(location.hash !== '#'+name){ location.hash = name; } else { show(name); } }
+  function show(name){
+    if(!$('[data-screen="'+name+'"]')) name = 'home';
+    $$('.screen').forEach(function(s){ s.classList.toggle('show', s.dataset.screen === name); });
+    $$('.side nav a').forEach(function(a){ a.classList.toggle('on', a.getAttribute('href') === '#'+name); });
+    var isGuest = GUEST.indexOf(name) > -1;
+    $('#mobileSwitch').textContent = isGuest ? 'Owner view' : 'Guest view';
+    var scr = $('[data-screen="'+name+'"]'); if(scr) scr.scrollTop = 0;
+    window.scrollTo(0,0);
+    if(name === 'details') fillDetails();
+    if(name === 'confirmed') fillConfirmed();
+    if(name === 'qr') startCountdown();
+  }
+  window.addEventListener('hashchange', function(){ show(location.hash.slice(1)); });
+  $('#mobileSwitch').addEventListener('click', function(){
+    go(GUEST.indexOf(location.hash.slice(1) || 'home') > -1 ? 'today' : 'home');
+  });
+
+  document.addEventListener('click', function(e){
+    var el = e.target.closest('[data-go]');
+    if(el){ e.preventDefault(); if(el.dataset.lesson) setLesson(el.dataset.lesson); go(el.dataset.go); return; }
+    var tt = e.target.closest('[data-toast]');
+    if(tt){ e.preventDefault(); toast(tt.dataset.toast); }
+  });
+
+  /* ---------- dates ---------- */
+  var today = new Date();
+  function addDays(n){ var d = new Date(today); d.setDate(d.getDate()+n); return d; }
+  function fmt(d, opts){ return d.toLocaleDateString('en-GB', opts); }
+  var dayList = [1,2,3,4,5].map(addDays);
+  $('#todayTitle').textContent = 'Today · ' + fmt(today,{weekday:'short', day:'numeric', month:'short'});
+  $('#weatherDate').textContent = fmt(today,{weekday:'short', day:'numeric', month:'short'});
+
+  /* ---------- lesson + time ---------- */
+  var LESSONS = {
+    group:{title:'Beginner group lesson', sub:'2 hours · [PRICE] per person', slots:[['6:00 – 8:00 AM','1 spot left',1],['8:30 – 10:30 AM','3 spots left',3],['3:30 – 5:30 PM','Full',0]]},
+    private:{title:'Private lesson', sub:'1.5 hours · [PRICE]', slots:[['7:00 – 8:30 AM','Available',2],['9:30 – 11:00 AM','Available',2],['4:00 – 5:30 PM','Full',0]]}
+  };
+  function setLesson(k){ state.lesson = k; state.slot = null; state.surfers = Math.min(state.surfers, 2); renderTime(); }
+  function renderTime(){
+    var L = LESSONS[state.lesson];
+    $('#timeTitle').textContent = L.title; $('#timeSub').textContent = L.sub;
+    $('#days').innerHTML = '';
+    dayList.forEach(function(d,i){
+      var b = document.createElement('button'); b.type='button';
+      b.className = 'opt day' + (i===state.dayIndex ? ' sel':'');
+      b.innerHTML = '<span class="dw">'+fmt(d,{weekday:'short'})+'</span><span class="dn">'+d.getDate()+'</span>';
+      b.addEventListener('click', function(){ state.dayIndex = i; state.slot = null; renderTime(); });
+      $('#days').appendChild(b);
+    });
+    $('#dayLabel').textContent = fmt(dayList[state.dayIndex],{weekday:'long', day:'numeric', month:'long'});
+    $('#slots').innerHTML = '';
+    L.slots.forEach(function(s,i){
+      var b = document.createElement('button'); b.type='button';
+      b.className = 'opt slot' + (state.slot===i ? ' sel':'');
+      b.disabled = s[2] === 0;
+      b.innerHTML = '<span>'+s[0]+'</span><span class="tiny">'+s[1]+'</span>';
+      b.addEventListener('click', function(){ state.slot = i; if(state.surfers > s[2]) state.surfers = s[2]; renderTime(); });
+      $('#slots').appendChild(b);
+    });
+    $('#surfers').textContent = state.surfers;
+    var btn = $('#toDetails');
+    if(state.slot === null){ btn.disabled = true; btn.textContent = 'Pick a time'; }
+    else { btn.disabled = false; btn.textContent = 'Continue · ' + L.slots[state.slot][0].split(' – ')[0] + ' ' + L.slots[state.slot][0].slice(-2) + ', ' + state.surfers + (state.surfers===1?' surfer':' surfers'); }
+  }
+  $$('[data-step]').forEach(function(b){ b.addEventListener('click', function(){
+    var max = state.slot===null ? 4 : LESSONS[state.lesson].slots[state.slot][2];
+    state.surfers = Math.max(1, Math.min(max, state.surfers + Number(b.dataset.step)));
+    if(Number(b.dataset.step) > 0 && state.surfers === max && state.slot!==null) toast('That\'s all the spots left in this session');
+    renderTime();
+  }); });
+  $('#toDetails').addEventListener('click', function(){ go('details'); });
+
+  /* ---------- details ---------- */
+  function whenText(){
+    var L = LESSONS[state.lesson];
+    return fmt(dayList[state.dayIndex],{weekday:'short', day:'numeric', month:'short'}) + ' · ' + (state.slot===null ? '' : L.slots[state.slot][0]) + ' · ' + state.surfers + (state.surfers===1?' surfer':' surfers');
+  }
+  function fillDetails(){
+    if(state.slot === null){ state.slot = 1; }
+    $('#sumLesson').textContent = LESSONS[state.lesson].title;
+    $('#sumWhen').textContent = whenText();
+  }
+  $$('#payOpts .opt').forEach(function(b){ b.addEventListener('click', function(){
+    state.pay = b.dataset.pay;
+    $$('#payOpts .opt').forEach(function(x){ x.classList.toggle('sel', x===b); });
+    var qr = state.pay === 'qr';
+    $('#payNote').textContent = qr ? 'QR deposit is paid straight to My Khe Surf Co. Your spot is held for 30 minutes while you pay.' : 'Pay the full amount in cash or by bank QR when you arrive.';
+    $('#depRow').style.display = qr ? 'flex' : 'none';
+    $('#balance').textContent = qr ? '[BALANCE]' : '[FULL PRICE]';
+    $('#toPay').textContent = qr ? 'Show QR and book' : 'Book now';
+  }); });
+  $('#toPay').addEventListener('click', function(){
+    if(!$('#waiver').checked){ toast('Please tick the swim and waiver box'); return; }
+    if(!$('#name').value.trim()){ toast('Please add your name'); return; }
+    go(state.pay === 'qr' ? 'qr' : 'confirmed');
+  });
+
+  /* ---------- sample QR (decorative pattern, not a payment code) ---------- */
+  (function drawQR(){
+    var n = 29, cells = '', seed = 7;
+    function rnd(){ seed = (seed*9301+49297)%233280; return seed/233280; }
+    function finder(x,y){ return '<rect x="'+x+'" y="'+y+'" width="7" height="7"/><rect x="'+(x+1)+'" y="'+(y+1)+'" width="5" height="5" fill="#fff"/><rect x="'+(x+2)+'" y="'+(y+2)+'" width="3" height="3"/>'; }
+    for(var y=0;y<n;y++) for(var x=0;x<n;x++){
+      var inF = (x<8&&y<8)||(x>n-9&&y<8)||(x<8&&y>n-9);
+      if(!inF && rnd()>0.52) cells += '<rect x="'+x+'" y="'+y+'" width="1" height="1"/>';
+    }
+    $('#qrSvg').innerHTML = '<g fill="#12202B">'+cells+finder(0,0)+finder(n-7,0)+finder(0,n-7)+'</g>';
+  })();
+  var cdTimer;
+  function startCountdown(){
+    var left = 30*60; clearInterval(cdTimer);
+    $('#refCode').textContent = 'MK-' + Math.random().toString(36).slice(2,6).toUpperCase();
+    cdTimer = setInterval(function(){
+      left--; var m = Math.floor(left/60), s = left%60;
+      $('#countdown').textContent = m + ':' + (s<10?'0':'') + s;
+      if(left<=0) clearInterval(cdTimer);
+    }, 1000);
+  }
+
+  /* ---------- confirmed ---------- */
+  function fillConfirmed(){
+    clearInterval(cdTimer);
+    if(state.slot === null) state.slot = 1;
+    var first = ($('#name').value.trim().split(' ')[0]) || 'there';
+    var L = LESSONS[state.lesson];
+    $('#bookedTitle').textContent = "You're booked, " + first;
+    $('#bookedWhen').innerHTML = L.title + ' · ' + state.surfers + (state.surfers===1?' surfer':' surfers') + '<br>' + fmt(dayList[state.dayIndex],{weekday:'short', day:'numeric', month:'short'}) + ' · ' + L.slots[state.slot][0];
+    $('#payStatus').innerHTML = state.pay==='qr' ? '<span class="pill ok">Deposit paid</span>' : '<span class="pill wait">Pay at the beach</span>';
+    $('#confirmMsg').textContent = 'Hi ' + first + ', your lesson with My Khe Surf Co. is confirmed for ' + fmt(dayList[state.dayIndex],{weekday:'short', day:'numeric', month:'short'}) + ' at ' + L.slots[state.slot][0].split(' – ')[0] + ' ' + L.slots[state.slot][0].slice(-2) + '. Meet at the blue flag on My Khe Beach. Reply here with any questions.';
+  }
+
+  /* ---------- rebook ---------- */
+  var rb = null;
+  $$('[data-rb]').forEach(function(b){ b.addEventListener('click', function(){
+    rb = b.dataset.rb; $$('[data-rb]').forEach(function(x){ x.classList.toggle('sel', x===b); });
+    $('#rebookBtn').disabled = false; $('#rebookBtn').textContent = 'Move to ' + rb;
+  }); });
+  $('#rebookBtn').addEventListener('click', function(){ toast('Moved to ' + rb + '. New confirmation sent.'); });
+
+  /* ---------- language (guest home only, sample) ---------- */
+  var VI = {
+    location:'Bãi biển Mỹ Khê, Đà Nẵng', choose:'Chọn lớp học', group:'Lớp nhóm cho người mới', groupDesc:'2 giờ · ván + áo bơi · tối đa 4 người mỗi HLV',
+    private:'Lớp riêng', privateDesc:'1,5 giờ · 1 HLV, 1–2 người', rental:'Thuê ván', rentalDesc:'Nửa ngày hoặc cả ngày',
+    seeTimes:'Xem giờ', questions:'Có câu hỏi? Chúng tôi trả lời nhanh.'
+  };
+  $$('[data-i18n]').forEach(function(el){ el.dataset.en = el.textContent; });
+  $$('[data-lang]').forEach(function(b){ b.addEventListener('click', function(){
+    state.lang = b.dataset.lang;
+    $$('[data-i18n]').forEach(function(el){ el.textContent = state.lang==='vi' ? (VI[el.dataset.i18n] || el.dataset.en) : el.dataset.en; });
+    $$('[data-lang]').forEach(function(x){
+      var on = x===b; x.style.background = on ? '#fff' : 'transparent'; x.style.color = on ? 'var(--ink)' : '#fff'; x.style.fontWeight = on ? '700' : '600';
+    });
+    document.documentElement.lang = state.lang;
+    if(state.lang==='vi') toast('Sample Vietnamese, only on this page. Needs a native speaker check.');
+  }); });
+
+  /* ---------- weather cancel ---------- */
+  function wxUpdate(){
+    var n = 0; $$('[data-wx].sel').forEach(function(b){ n += Number(b.dataset.wx); });
+    var reason = $('#reasons .sel').dataset.reason;
+    $('#wxMsg').textContent = 'Sorry, ' + reason + ' today. Tap to pick a new time for free, or get a full refund of your deposit.';
+    var btn = $('#wxSend'); btn.disabled = n===0;
+    btn.textContent = n===0 ? 'Pick at least one session' : 'Message ' + n + (n===1?' surfer':' surfers') + ' and cancel';
+    $('#klookNote').style.display = $$('[data-wx]')[0].classList.contains('sel') ? 'block' : 'none';
+  }
+  $$('[data-wx]').forEach(function(b){ b.addEventListener('click', function(){ b.classList.toggle('sel'); b.classList.toggle('warnsel', b.classList.contains('sel')); wxUpdate(); }); });
+  $$('#reasons .chip').forEach(function(b){ b.addEventListener('click', function(){ $$('#reasons .chip').forEach(function(x){ x.classList.toggle('sel', x===b); }); wxUpdate(); }); });
+  $('#wxSend').addEventListener('click', function(){ toast('Cancel messages ready. Guests can rebook or ask for a refund.'); setTimeout(function(){ go('today'); }, 1200); });
+  wxUpdate();
+
+  /* ---------- walk-in ---------- */
+  var wi = {session:'8:30 AM', count:1, paid:'Cash', spots830:2};
+  function wiRender(){
+    $('#wiCount').textContent = wi.count;
+    $('#wiAdd').textContent = 'Add to ' + wi.session;
+    $('#wiSpots').textContent = wi.spots830 + (wi.spots830===1?' spot':' spots');
+    var b830 = $('[data-wi="8:30 AM"]'); b830.disabled = wi.spots830===0;
+  }
+  $$('[data-wi]').forEach(function(b){ b.addEventListener('click', function(){ wi.session = b.dataset.wi; $$('[data-wi]').forEach(function(x){ x.classList.toggle('sel', x===b); }); wiRender(); }); });
+  $$('[data-wstep]').forEach(function(b){ b.addEventListener('click', function(){ wi.count = Math.max(1, Math.min(4, wi.count + Number(b.dataset.wstep))); wiRender(); }); });
+  $$('#wiPaid .opt').forEach(function(b){ b.addEventListener('click', function(){ wi.paid = b.dataset.paid; $$('#wiPaid .opt').forEach(function(x){ x.classList.toggle('sel', x===b); }); }); });
+  $('#wiAdd').addEventListener('click', function(){
+    var name = $('#wiName').value.trim() || 'Walk-in';
+    if(wi.session === '8:30 AM'){
+      if(wi.count > wi.spots830){ toast('Only ' + wi.spots830 + ' spots left at 8:30 AM'); return; }
+      wi.spots830 -= wi.count;
+      $('#cap830').textContent = (4 - wi.spots830) + '/4';
+      var line = document.createElement('div'); line.className = 'gline';
+      line.innerHTML = '<span>' + name.replace(/</g,'&lt;') + (wi.count>1?' ×'+wi.count:'') + '</span><span class="r"><span class="src">Beach</span><span class="pill ' + (wi.paid==='Not paid'?'wait':'ok') + '">' + (wi.paid==='Not paid'?'Not paid':'Paid ' + wi.paid.toLowerCase()) + '</span></span>';
+      $('#walkins830').appendChild(line);
+    }
+    toast('Added ' + name + ' to ' + wi.session);
+    $('#wiName').value = ''; wi.count = 1; wiRender();
+    setTimeout(function(){ go('today'); }, 900);
+  });
+  wiRender();
+
+  /* ---------- check-in ---------- */
+  function ciSummary(){
+    var came=0, no=0, unpaid=0;
+    $$('[data-screen="checkin"] [data-guest]').forEach(function(c){
+      var n = Number(c.dataset.guest), isNo = c.querySelector('[data-att="no"]').classList.contains('sel');
+      if(isNo) no += n; else came += n;
+      var rep = c.querySelector('[data-repeat]'); if(rep) rep.style.display = isNo ? 'block' : 'none';
+      var pg = c.querySelector('[data-paygroup]');
+      if(pg){ pg.style.display = isNo ? 'none' : 'grid'; if(!isNo && pg.querySelector('[data-p="none"]').classList.contains('sel')) unpaid++; }
+    });
+    $('#ciSummary').textContent = came + ' came · ' + no + ' no-show · ' + unpaid + ' unpaid';
+  }
+  $$('[data-screen="checkin"] [data-att]').forEach(function(b){ b.addEventListener('click', function(){
+    var card = b.closest('[data-guest]');
+    $$('[data-att]', card).forEach(function(x){ var on = x===b; x.classList.toggle('sel', on); x.classList.toggle('badsel', on && x.dataset.att==='no'); });
+    ciSummary();
+  }); });
+  $$('[data-screen="checkin"] [data-p]').forEach(function(b){ b.addEventListener('click', function(){
+    var g = b.closest('[data-paygroup]');
+    $$('[data-p]', g).forEach(function(x){ var on = x===b; x.classList.toggle('sel', on); x.classList.toggle('warnsel', on && x.dataset.p==='none'); });
+    ciSummary();
+  }); });
+  $('#ciSave').addEventListener('click', function(){
+    toast('Saved. Stats updated.');
+    $('#checkinBtn').textContent = 'Done · ' + $('#ciSummary').textContent;
+    $('#checkinBtn').style.background = 'var(--accent)';
+    setTimeout(function(){ go('today'); }, 1000);
+  });
+  ciSummary();
+
+  /* ---------- stats ---------- */
+  $$('#periods .chip').forEach(function(b){ b.addEventListener('click', function(){
+    $$('#periods .chip').forEach(function(x){ var on = x===b; x.classList.toggle('sel', on); x.style.border = on ? '' : '0'; });
+    toast('In the real app the numbers would change for ' + b.textContent.toLowerCase());
+  }); });
+  $$('[data-markpaid]').forEach(function(b){ b.addEventListener('click', function(){ var row = b.parentNode; row.style.opacity = '.4'; b.textContent = 'Paid'; b.disabled = true; toast('Marked as paid'); }); });
+
+  /* ---------- links ---------- */
+  var LINKS = [
+    ['Instagram bio','ig',412,31],['Google Maps','maps',268,24],['Beach sign QR','beach',190,18],['Hostel front desk QR','hostel1',95,11],['Facebook group post','fb',120,2]
+  ];
+  function renderLinks(){
+    var best = 0; LINKS.forEach(function(l,i){ if(l[2] && l[3]/l[2] > LINKS[best][3]/LINKS[best][2]) best = i; });
+    $('#linkList').innerHTML = '';
+    LINKS.forEach(function(l,i){
+      var rate = l[2] ? Math.round(l[3]/l[2]*100) + '%' : '–';
+      var c = document.createElement('div'); c.className = 'card'; c.style.padding = '12px 14px'; c.style.gap = '8px';
+      if(i===best){ c.style.border = '1px solid var(--accent)'; }
+      c.innerHTML = '<div class="lrow"><span style="font-weight:700">'+l[0]+'</span><span class="small">'+l[2]+'</span><span style="font-weight:800">'+l[3]+'</span><span class="small"'+(i===best?' style="color:var(--accent);font-weight:700"':'')+'>'+rate+'</span></div>' +
+        '<div class="between"><span class="tiny">bookingos.com/mykhe/'+l[1]+'</span><span style="display:flex;gap:6px"><button type="button" class="chip" data-copy="'+l[1]+'" style="padding:6px 10px;color:var(--accent);font-weight:700;font-size:12px">Copy</button><button type="button" class="chip" data-toast="Would download a printable QR code for '+l[0]+'" style="padding:6px 10px;color:var(--accent);font-weight:700;font-size:12px">QR</button></span></div>';
+      $('#linkList').appendChild(c);
+    });
+    $$('[data-copy]').forEach(function(b){ b.addEventListener('click', function(){
+      var url = 'bookingos.com/mykhe/' + b.dataset.copy;
+      try { navigator.clipboard.writeText(url).then(function(){ toast('Copied ' + url); }, function(){ toast(url); }); } catch(e){ toast(url); }
+    }); });
+  }
+  $('#newLink').addEventListener('click', function(){
+    var places = [['Hotel lobby QR','hotel1'],['TikTok bio','tiktok'],['Café counter QR','cafe1']];
+    var p = places[(LINKS.length - 5) % places.length];
+    if(LINKS.length >= 8){ toast('That\'s enough sample links for the prototype'); return; }
+    LINKS.push([p[0], p[1], 0, 0]); renderLinks(); toast('New link made: bookingos.com/mykhe/' + p[1]);
+  });
+  renderLinks();
+
+  /* ---------- start ---------- */
+  renderTime();
+  show(location.hash.slice(1) || 'home');
+})();
+</script>
+</body>
+</html>
